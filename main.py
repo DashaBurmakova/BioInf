@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def integrate_ode(start, end, step_size, max_function_calls, tolerance, differential_eq, initial_state):
     """
     Функция для численного решения ОДУ методом Рунге-Кутты с адаптивным шагом.
@@ -45,7 +44,7 @@ def integrate_ode(start, end, step_size, max_function_calls, tolerance, differen
             step_size *= 2
 
         current_time += step_size
-        state_vector = single_step
+        state_vector = half_step2  # Используем half_step2 для следующей итерации
 
         print(f"{current_time:13.6f}{step_size:13.6f}{error_estimate:13.5e}{function_calls[0]:13d}",
               *[f"{x:12.6f}" for x in state_vector])
