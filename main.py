@@ -18,18 +18,36 @@ def integrate_ode(start, end, step_size, max_function_calls, tolerance, differen
         return state + (h / 6) * (k1 + 2 * k2 + 2 * k3 + k4)
 
     while current_time < end and function_calls[0] < max_function_calls:
-        single_step = rk4_step(current_time, state_vector, step_size)
-        half_step1 = rk4_step(current_time, state_vector, step_size / 2)
-        half_step2 = rk4_step(current_time + step_size / 2, half_step1, step_size / 2)
+        # Вычисляем k1 и single_step
+        k1 = np.array([eq(current_time, state_vector, function_calls) for eq in differential_eqs])
+        single_step = state_vector + (step_size / 6) * k1
 
-        error_estimate = np.linalg.norm(half_step2 - single_step) / 15
+        # Вычисляем half_step1 и k2
+        half_step1 = rk4_step(current_time, state_vector, step_size / 2)
+        k2 = np.array([eq(current_time + step_size / 2, half_step1, function_calls) for eq in differential_eqs])
+
+        # Вычисляем half_step2 и k3
+        half_step2 = rk4_step(current_time + step_size / 2, half_step1, step_size / 2)
+        k3 = np.array([eq(current_time + step_size / 2, half_step2, function_calls) for eq in differential_eqs])
+
+        # Вычисляем k4
+        k4 = np.array([eq(current_time + step_size, half_step2, function_calls) for eq in differential_eqs])
+
+        # Оценка ошибки
+        error_estimate = np.linalg.norm(half_step2 - (state_vector + (step_size / 6) * (k1 + 2 * k2 + 2 * k3 + k4))) / 15
 
         while error_estimate > tolerance and function_calls[0] < max_function_calls:
             step_size /= 2
-            single_step = rk4_step(current_time, state_vector, step_size)
+            k1 = np.array([eq(current_time, state_vector, function_calls) for eq in differential_eqs])
+            single_step = state_vector + (step_size / 6) * k1
+
             half_step1 = rk4_step(current_time, state_vector, step_size / 2)
+            k2 = np.array([eq(current_time + step_size / 2, half_step1, function_calls) for eq in differential_eqs])
             half_step2 = rk4_step(current_time + step_size / 2, half_step1, step_size / 2)
-            error_estimate = np.linalg.norm(half_step2 - single_step) / 15
+            k3 = np.array([eq(current_time + step_size / 2, half_step2, function_calls) for eq in differential_eqs])
+            k4 = np.array([eq(current_time + step_size, half_step2, function_calls) for eq in differential_eqs])
+
+            error_estimate = np.linalg.norm(half_step2 - (state_vector + (step_size / 6) * (k1 + 2 * k2 + 2 * k3 + k4))) / 15
 
         if error_estimate < tolerance / 64:
             step_size *= 2
